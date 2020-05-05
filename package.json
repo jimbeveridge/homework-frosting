@@ -1,0 +1,12 @@
+{
+  "name": "Assignments Finder",
+  "version": "0.0.1",
+  "description": "Extract and organize assignments from Microsoft Teams for education",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jimbeveridge/assignments-finder.git"
+  },
+  "keywords": ["education", "Microsoft Teams", "assignments", "homework", "classes"],
+  "author": "Jim Beveridge",
+  "license": "Apache-2.0"
+}

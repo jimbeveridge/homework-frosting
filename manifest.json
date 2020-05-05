@@ -1,0 +1,36 @@
+{
+    "name": "Assignments for Microsoft Teams",
+    "version": "0.0.1",
+    "manifest_version": 2,
+    "description": "Extract class assignments from Microsoft Teams sites",
+    "icons": {
+        "16": "icons/icon16.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+    },
+    "default_locale": "en",
+    "background": {
+        "page": "src/bg/background.html",
+        "persistent": false
+    },
+    "options_page": "src/options/options.html",
+    "page_action": {
+        "default_icon": "icons/icon19.png",
+        "default_title": "Assignments Finder",
+        "default_popup": "src/page_action/page_action.html"
+    },
+    "content_scripts": [{
+            "matches": ["https://assignments.onenote.com/*"],
+            "js": ["src/content/contentScript.js"],
+            "all_frames": true
+        }
+    ],
+    "permissions": [
+        "https://assignments.onenote.com/*",
+        "storage",
+        "declarativeContent",
+        "activeTab",
+        "tabs",
+        "clipboardWrite"
+    ]
+}

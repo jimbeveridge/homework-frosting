@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+
+    <style>
+      body {
+
+      header {
+        grid-area: header;
+        font-size: 1.2rem;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      fieldset {
+        position: relative;
+        /* border: 1px solid rgba(0, 0, 0, 0.1); */
+        margin-bottom: 1.2em;
+      }
+
+      legend {
+        font-size: 1.3rem;
+        background-color: #000;
+        color: #fff;
+        padding: 3px 6px;
+      }
+
+      button {
+        position: absolute;
+        right: -2px;
+        top: 3px;
+        width: 100px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>🐥 MS Teams Assignments</h1>
+    </header>
+
+    <fieldset>
+      <legend>Today's Assignments</legend>
+
+      <button id="copyTodayButton" type="button">Copy</button>
+      <pre id="forToday"></pre>
+    </fieldset>
+
+    <fieldset>
+      <legend>Late Assignments</legend>
+
+      <button id="copyLateButton" type="button">Copy</button>
+      <pre id="forLate"></pre>
+    </fieldset>
+
+    <fieldset>
+      <legend>Upcoming Assignments</legend>
+
+      <button id="copyUpcomingButton" type="button">Copy</button>
+      <pre id="forUpcoming"></pre>
+    </fieldset>
+
+    <fieldset>
+      <legend>Completed Assignments</legend>
+
+      <button id="copyCompletedButton" type="button">Copy</button>
+      <pre id="forCompleted"></pre>
+    </fieldset>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
