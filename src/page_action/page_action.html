@@ -21,10 +21,12 @@
         color: MediumPurple;
       }
 
-      .pic {
+      .updated {
         position: absolute;
-        top: 4px;
-        right: 9rem;
+        top: 1.5rem;
+        right: 12rem;
+        font-size: 130%;
+        font-weight: bold;
       }
 
       table {
@@ -123,8 +125,8 @@
 
       button {
         position: absolute;
-        right: -2px;
-        top: 3px;
+        right: 12px;
+        top: 10px;
         width: 100px;
       }
     </style>
@@ -133,9 +135,10 @@
     <header>
     </header>
 
-    <h1>Homework Frosting</h1>
-    <img src="icon32.png" class="pic"/>
-    <button id="copyButton" type="button">Copy</button>
+    <h1><img src="icon32.png"/> Homework Frosting</h1>
+    <div class="updated">Updated <span id="updated"></span></div>
+
+    <button id="copyButton" type="button">Copy Page</button>
     <div id="copyme">
       <h2>Today's Assignments</h2>
       <div id="forToday"></div>

@@ -126,12 +126,29 @@ function CreateTableFromJSON(doc, myBooks, col, id) {
     divContainer.appendChild(table);
 }
 
-function compare(a, b) {
+// Reverse sort
+function compareSubmittedDateTime(a, b) {
     let bandA = "";
     let bandB = "";
 
-    if ("dueIso" in a) bandA = a.dueIso;
-    if ("dueIso" in b) bandB = b.dueIso;
+    if ("submittedDateTime" in a) bandA = a.submittedDateTime;
+    if ("submittedDateTime" in b) bandB = b.submittedDateTime;
+
+    let comparison = 0;
+    if (bandA < bandB) {
+        comparison = 1;
+    } else if (bandA > bandB) {
+        comparison = -1;
+    }
+    return comparison;
+}
+
+function compareDueDateTime(a, b) {
+    let bandA = "";
+    let bandB = "";
+
+    if ("dueDateTime" in a) bandA = a.dueDateTime;
+    if ("dueDateTime" in b) bandB = b.dueDateTime;
 
     let comparison = 0;
     if (bandA > bandB) {
@@ -142,8 +159,16 @@ function compare(a, b) {
     return comparison;
 }
 
-function daysDiff(dt1, dt2)
-{
+// dt1 and dt2 are both iso date strings
+function hoursDiff(dt1, dt2) {
+    let d1 = new Date(dt1);
+    let d2 = new Date(dt2);
+
+    let diffTime = (d2.getTime() - d1.getTime());
+    return diffTime / (1000 * 3600);
+}
+
+function daysDiff(dt1, dt2) {
     // calculate the time difference of two dates JavaScript
     let diffTime = (dt2.getTime() - dt1.getTime());
     // calculate the number of days between two dates javascript
@@ -151,14 +176,12 @@ function daysDiff(dt1, dt2)
     return daysDiff;
 }
 
-function render(incoming) {
-
-    let details = incoming;
-
-    for (let i = 0; i < details.length; i++) {
-        el = details[i];
+function render(rows, updated) {
+    for (let i = 0; i < rows.length; i++) {
+        let el = rows[i];
         el.name = "<b>" + el.name + "</b>";
-        el.due = dateFormat(new Date(el.dueIso), "ddd, mmm dS, yyyy, h:MM TT")
+        el.due = dateFormat(new Date(el.dueDateTime), "ddd, mmm dS, h:MM TT")
+        el.submitted = el.submittedDateTime != "" ? dateFormat(new Date(el.submittedDateTime), "ddd, mmm dS, h:MM TT") : "";
         if ("rework" in el) {
             if (el.rework) {
                 el.today = true;
@@ -166,40 +189,44 @@ function render(incoming) {
                 el.completed = false;
             }
         }
+        if (el.completed && hoursDiff(el.submittedDateTime, updated) < 24) {
+            el.submitted += " &#11088;";
+        }
     }
 
-    details = details.sort(compare);
-    details = details.filter((item) => !item.name.includes('Banga') && !item.name.includes('Nielsen'));
+    let el = document.getElementById("updated");
+    el.innerText = dateFormat(new Date(updated), "ddd, mmm dS, yyyy, h:MM TT");
+
+    rows = rows.sort(compareDueDateTime);
+
+    // TODO Issue #
+    //rows = rows.filter((item) => !item.name.includes('Name1') && !item.name.includes('Name2'));
 
     let headings = ["classname", "name", "due", "points"];
 
-    var wanted = details.filter((item) => item.today);
+    var wanted = rows.filter((item) => item.today);
     CreateTableFromJSON(document, wanted, headings, "forToday");
 
-    wanted = details.filter((item) => item.late && !item.completed);
+    wanted = rows.filter((item) => item.late && !item.completed);
     CreateTableFromJSON(document, wanted, headings, "forLate");
 
-    wanted = details.filter((item) => !item.completed && !item.late && !item.today);
+    wanted = rows.filter((item) => !item.completed && !item.late && !item.today);
     CreateTableFromJSON(document, wanted, headings, "forUpcoming");
 
-    const now = Date();
-    wanted = details.filter((item) => item.completed);
+    headings = ["classname", "name", "submitted", "points"];
+    wanted = rows.filter((item) => item.completed).sort(compareSubmittedDateTime);;
     CreateTableFromJSON(document, wanted, headings, "forCompleted");
 }
 
 function render_table_from_storage() {
     chrome.storage.local.get("data", function(obj) {
-
-        let details = obj.data;
-
-        details.sort(compare);
-        render(details);
+        render(obj.data.rows, obj.data.updated);
     });
 }
 
 render_table_from_storage();
 
-// let details = obj.details;
+// let rows = obj.rows;
 
-// details.sort(compare);
-// render(obj.details);
+// rows.sort(compare);
+// render(obj.rows);

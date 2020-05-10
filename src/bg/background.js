@@ -162,13 +162,25 @@ function has_rework(submissions) {
     return false;
 }
 
+function get_latest(coll, key) {
+    if (coll == null) return "";
+    let latest = "";
+    for (let i = 0; i < coll.length; i++) {
+        if (coll[i][key] > latest) {
+            latest = coll[i][key];
+        }
+    }
+    return latest;
+}
+
 function create_row(classname, assignment) {
     const nowIso = new Date().toISOString();
     //console.log(classname + "|" + assignment.displayName + "|" + assignment.dueDate + "|" + nowIso);
     row = {
         id: assignment.id,
         classname: classname,
-        dueIso: assignment.dueDateTime,
+        dueDateTime: assignment.dueDateTime,
+        submittedDateTime: get_latest(assignment.submissions, "submittedDateTime"),
         late: assignment.dueDateTime < nowIso,
         name: assignment.displayName,
         today: is_today(assignment.dueDateTime),
@@ -206,7 +218,8 @@ async function build(bearer) {
         jsons = await fetch_all_with_bearer(bearer, classes);
         coll = create_rows_from_class_map(jsons);
         //console.log(JSON.stringify(coll, null, 4));
-        chrome.storage.local.set({ data: coll }, function() {
+        const now = new Date();
+        chrome.storage.local.set({ data: { rows: coll, updated: now.toISOString() } }, function() {
             chrome.windows.create({
                 // Just use the full URL if you need to open an external page
                 url: chrome.runtime.getURL("page_action/page_action.html")
