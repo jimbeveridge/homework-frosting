@@ -2,7 +2,7 @@ function processForm(e) {
     if (e.preventDefault) e.preventDefault();
 
     phrases = document.getElementById('options').value;
-    chrome.storage.sync.set({ filter: phrases }, function() {
+    chrome.storage.sync.set({ options: { filter: phrases } }, function() {
         document.getElementById('saved').innerHTML = "<span class='glow'>Saved</span>";
     });
 
@@ -14,9 +14,10 @@ window.onload = function() {
     let el = document.getElementById("options");
     el.placeholder = "EXTRA CREDIT\nmacinerny";
 
-    chrome.storage.sync.get("filter", function(obj) {
-        if (obj != null && obj.filter != null) {
-            el.value = obj.filter;
+    chrome.storage.sync.get("options", function(obj) {
+        let options = obj.options;
+        if (options != null && options.filter != null) {
+            el.value = options.filter;
         }
     });
     document.getElementById('options-form').onsubmit = function(e) {

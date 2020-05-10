@@ -144,12 +144,14 @@ function get_assignments(classes) {
     return info;
 }
 
-function is_today(iso, today) {
-    const someDate = new Date(iso);
-    if (today == null) today = new Date();
-    return someDate.getDate() == today.getDate() &&
-        someDate.getMonth() == today.getMonth() &&
-        someDate.getFullYear() == today.getFullYear();
+function missing_submission(submissions) {
+    if (submissions == null) return false;
+    for (let i = 0; i < submissions.length; i++) {
+        let sub = submissions[i];
+        if (sub.status != "returned" && sub.submittedDateTime === null)
+            return true;
+    }
+    return false;
 }
 
 function has_rework(submissions) {
@@ -174,17 +176,14 @@ function get_latest(coll, key) {
 }
 
 function create_row(classname, assignment) {
-    const nowIso = new Date().toISOString();
-    //console.log(classname + "|" + assignment.displayName + "|" + assignment.dueDate + "|" + nowIso);
     row = {
         id: assignment.id,
         classname: classname,
         dueDateTime: assignment.dueDateTime,
         submittedDateTime: get_latest(assignment.submissions, "submittedDateTime"),
-        late: assignment.dueDateTime < nowIso,
         name: assignment.displayName,
-        today: is_today(assignment.dueDateTime),
         points: assignment.grading ? assignment.grading.maxPoints : null,
+        missingSubmission: missing_submission(assignment.submissions),
         rework: has_rework(assignment.submissions),
         completed: assignment.isCompleted
     };

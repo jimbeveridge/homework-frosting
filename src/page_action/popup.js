@@ -187,10 +187,22 @@ function is_skipped(name, filters) {
     return false;
 }
 
+function is_today(iso, today) {
+    const someDate = new Date(iso);
+    if (today == null) today = new Date();
+    return someDate.getDate() == today.getDate() &&
+        someDate.getMonth() == today.getMonth() &&
+        someDate.getFullYear() == today.getFullYear();
+}
+
 function render(rows, updated, filter) {
+    const nowIso = new Date().toISOString();
+
     for (let i = 0; i < rows.length; i++) {
         let el = rows[i];
         el.name = "<b>" + el.name + "</b>";
+        el.today = is_today(el.dueDateTime);
+        el.late = el.dueDateTime < nowIso && (!el.completed || el.missingSubmission);
         el.due = dateFormat(new Date(el.dueDateTime), "ddd, mmm dS, h:MM TT")
         el.submitted = el.submittedDateTime != "" ? dateFormat(new Date(el.submittedDateTime), "ddd, mmm dS, h:MM TT") : "";
         if ("rework" in el) {
@@ -219,22 +231,23 @@ function render(rows, updated, filter) {
     var wanted = rows.filter((item) => item.today);
     CreateTableFromJSON(document, wanted, headings, "forToday");
 
-    wanted = rows.filter((item) => item.late && !item.completed);
+    wanted = rows.filter((item) => item.late);
     CreateTableFromJSON(document, wanted, headings, "forLate");
 
     wanted = rows.filter((item) => !item.completed && !item.late && !item.today);
     CreateTableFromJSON(document, wanted, headings, "forUpcoming");
 
     headings = ["classname", "name", "submitted", "points"];
-    wanted = rows.filter((item) => item.completed).sort(compareSubmittedDateTime);;
+    wanted = rows.filter((item) => item.completed && !item.late).sort(compareSubmittedDateTime);;
     CreateTableFromJSON(document, wanted, headings, "forCompleted");
 }
 
 async function render_table_from_storage() {
     chrome.storage.local.get("data", function(local) {
-        chrome.storage.sync.get("filter", function(obj) {
+        chrome.storage.sync.get("options", function(obj) {
             let filter = "";
-            if (obj != null && obj.filter != null) filter = obj.filter;
+            let options = obj.options;
+            if (options != null && options.filter != null) filter = options.filter;
             render(local.data.rows, local.data.updated, filter);
         });
     });
