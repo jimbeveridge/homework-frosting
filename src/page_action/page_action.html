@@ -5,7 +5,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Modak&display=swap" rel="stylesheet">
     <style>
       body {
-        font-family: "Open Sans", sans-serif;
         line-height: 1.15;
         /*min-width: 705px; /* your desired width */
         /*max-width: 100%;*/
@@ -21,13 +20,15 @@
         color: MediumPurple;
       }
 
-      .updated {
-        position: absolute;
-        top: 1.5rem;
-        right: 12rem;
-        font-size: 130%;
-        font-weight: bold;
+      #copyButton {
+        display: none;
       }
+
+      .updated {
+          font-size: 130%;
+          font-weight: bold;
+          margin-bottom: 0.5rem;
+        }
 
       table {
         border: 1px solid #ccc;
@@ -59,6 +60,30 @@
         font-size: .85em;
         letter-spacing: .1em;
         text-transform: uppercase;
+      }
+
+      th.classname {
+        width: 25%;
+      }
+
+      th.points {
+        width: 4rem;
+      }
+
+      th.due, th.submitted {
+        width: 10rem;
+      }
+
+      @media screen and (min-width: 900px) {
+        #copyButton {
+          display: block;
+        }
+
+        .updated {
+          position: absolute;
+          top: 1.5rem;
+          right: 12rem;
+        }
       }
 
       @media screen and (max-width: 600px) {
@@ -138,7 +163,7 @@
     <h1><img src="icon32.png"/> Homework Frosting</h1>
     <div class="updated">Updated <span id="updated"></span></div>
 
-    <button id="copyButton" type="button">Copy Page</button>
+    <button id="copyButton" type="button">Copy to Clipboard</button>
     <div id="copyme">
       <h2>Today's Assignments</h2>
       <div id="forToday"></div>

@@ -74,6 +74,7 @@ function generateTableHead(table, data) {
     let row = thead.insertRow();
     for (let key of data) {
         let th = document.createElement("th");
+        th.className = key;
         let text = document.createTextNode(key);
         th.appendChild(text);
         row.appendChild(th);
