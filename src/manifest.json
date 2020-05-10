@@ -1,8 +1,8 @@
 {
-    "name": "Homework Frosting for Microsoft Teams",
+    "name": "Homework Frosting",
     "version": "0.0.1",
     "manifest_version": 2,
-    "description": "Extract homework assignments from Microsoft Teams. Click the cupcake button while you are in Teams in your Chrome browser.",
+    "description": "Extract homework assignments from Microsoft Teams. Click the cupcake button after you go to your Teams page.",
     "icons": {
         "16": "icons/icon16.png",
         "32": "icons/icon32.png",
@@ -22,12 +22,8 @@
     "permissions": [
         "https://assignments.onenote.com/",
         "*://assignments.onenote.com/",
-        "https://teams.microsoft.com/",
-        "*://teams.microsoft.com/",
         "storage",
         "declarativeContent",
-        "activeTab",
-        "cookies",
         "activeTab",
         "clipboardWrite"
     ]
