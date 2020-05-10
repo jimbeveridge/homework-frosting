@@ -11,9 +11,12 @@ function processForm(e) {
 }
 
 window.onload = function() {
+    let el = document.getElementById("options");
+    el.placeholder = "EXTRA CREDIT\nmacinerny";
+
     chrome.storage.sync.get("filter", function(obj) {
         if (obj != null && obj != "") {
-            document.getElementById("options").value = obj.filter;
+            el.value = obj.filter;
         }
     });
     document.getElementById('options-form').onsubmit = function(e) {

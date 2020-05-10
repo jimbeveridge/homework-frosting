@@ -5,6 +5,7 @@
     <style>
       body {
         font-size: 100%;
+        max-width: 700px;
       }
 
       h1 {
@@ -15,6 +16,21 @@
         margin-bottom: 0;
         padding-bottom: 0;
         color: MediumPurple;
+      }
+
+      h2 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+      }
+
+      label {
+        font-weight: bold;
+      }
+
+      input {
+        color: white;
+        background-color: mediumpurple;
+        font-weight: bold;
       }
 
       .glow {
@@ -36,9 +52,8 @@
   </head>
   <body>
     <h1><img src="../icons/icon32.png"/> Homework Frosting</h1>
-    <p>This Chrome Extension allows you to easy create a quick snapshot
-    of your assignments in Microsoft Teams. To create a report:
-  </p>
+    <div>Quickly create a list of your assignments in Microsoft Teams:
+    </div>
   <ol>
     <li>Go to https://teams.microsoft.com</li>
     <li>Sign in, if necessary</li>
@@ -47,21 +62,11 @@
     <li>Wait about ten seconds and the report will be displayed</li>
   </ol>
   <h2>Options</h2>
-  <p>It's often necessary to filter out some lines that don't apply.
-    For example, sometimes teachers share a class name and they put
-    their name on the assignments that apply to them.
-  </p>
-  <p>To filter out assignments you don't want to see, enter words
+  <div>To filter out assignments you don't want to see, enter words
     or phrases, one per line. For example, if you never want to see
-    anything containing "extra credit" or by the teacher Mr. Macinerny,
-    then enter the following options in the box below. Search text is
-    case-insensitive, which means that "extra credit" and "EXTRA CREDIT"
-    will both work.
-  </p>
-  <ul>
-    <li>extra credit</li>
-    <li>Macinerny</li>
-  </ul>
+    assignments containing "extra credit" or by the teacher Mr. Macinerny,
+    then type each on its own line.
+  </div>
   <br>
   <form id="options-form">
       <label for="options">Remove assignments with these words or phrases:</label>
@@ -71,6 +76,9 @@
       <input type="submit">&nbsp;&nbsp;
       <b><span id="saved" style="color: mediumpurple"></span></b>
     </form>
+    <p><em>Search text is
+    case-insensitive, which means that "extra credit" and "EXTRA CREDIT"
+    will both work.</em></p>
   </body>
   <script src="options.js"></script>
 </html>
