@@ -229,8 +229,7 @@ if (!!chrome.runtime) {
     // https://developer.chrome.com/extensions/getstarted
     chrome.runtime.onInstalled.addListener(function() {
 
-        chrome.browserAction.onClicked.addListener(function(tab) {
-            //state is off, on, init. Storage monitoring is only active if "on".
+        chrome.pageAction.onClicked.addListener(function(tab) {
             generate_report();
         });
 
