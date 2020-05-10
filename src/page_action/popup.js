@@ -180,6 +180,7 @@ function daysDiff(dt1, dt2) {
 // then this is skipped.
 function is_skipped(name, filters) {
     for (let i=0; i<filters.length; i++) {
+        if (filters[i] == "") continue;
         if (name.toLowerCase().indexOf(filters[i].toLowerCase()) != -1) {
             return true;
         }
@@ -223,7 +224,11 @@ function render(rows, updated, filter) {
     rows = rows.sort(compareDueDateTime);
 
     // TODO Issue #
-    const filters = filter.split("\n");
+    let filters = filter.split("\n");
+    for (let i=0; i<filters.length; i++) {
+        if (filters[i].trim() == "")
+            filters[i] = "";
+    }
     rows = rows.filter((item) => !is_skipped(item.name + " " + item.classname, filters));
 
     let headings = ["classname", "name", "due", "points"];
