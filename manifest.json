@@ -1,8 +1,8 @@
 {
-    "name": "Assignments for Microsoft Teams",
+    "name": "Homework Vision for Microsoft Teams",
     "version": "0.0.1",
     "manifest_version": 2,
-    "description": "Extract class assignments from Microsoft Teams sites",
+    "description": "Extract homework assignments from Microsoft Teams. You must click the button while you are in Teams in your Chrome browser.",
     "icons": {
         "16": "icons/icon16.png",
         "48": "icons/icon48.png",
@@ -14,22 +14,19 @@
         "persistent": false
     },
     "options_page": "src/options/options.html",
-    "page_action": {
+    "browser_action": {
         "default_icon": "icons/icon19.png",
-        "default_title": "Assignments Finder",
-        "default_popup": "src/page_action/page_action.html"
+        "default_title": "Assignments Finder"
     },
-    "content_scripts": [{
-            "matches": ["https://assignments.onenote.com/*"],
-            "js": ["src/content/contentScript.js"],
-            "all_frames": true
-        }
-    ],
     "permissions": [
-        "https://assignments.onenote.com/*",
+        "https://assignments.onenote.com/",
+        "*://assignments.onenote.com/",
+        "https://teams.microsoft.com/",
+        "*://teams.microsoft.com/",
         "storage",
         "declarativeContent",
         "activeTab",
+        "cookies",
         "tabs",
         "clipboardWrite"
     ]

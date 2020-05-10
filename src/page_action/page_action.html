@@ -5,25 +5,101 @@
 
     <style>
       body {
-
-      header {
-        grid-area: header;
-        font-size: 1.2rem;
-
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        font-family: "Open Sans", sans-serif;
+        line-height: 1.25;
+        /*min-width: 705px; /* your desired width */
+        /*max-width: 100%;*/
       }
 
+      table {
+        border: 1px solid #ccc;
+        border-collapse: collapse;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        table-layout: fixed;
+      }
+
+      table caption {
+        font-size: 1.5em;
+        margin: .5em 0 .75em;
+      }
+
+      table tr {
+        background-color: #f8f8f8;
+        border: 1px solid #ddd;
+        padding: .35em;
+      }
+
+      table th,
+      table td {
+        padding: .625em;
+        text-align: left;
+      }
+
+      table th {
+        font-size: .85em;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+      }
+
+      @media screen and (max-width: 600px) {
+        table {
+          border: 0;
+        }
+
+        table caption {
+          font-size: 1.3em;
+        }
+
+        table thead {
+          border: none;
+          clip: rect(0 0 0 0);
+          height: 1px;
+          margin: -1px;
+          overflow: hidden;
+          padding: 0;
+          position: absolute;
+          width: 1px;
+        }
+
+        table tr {
+          border-bottom: 3px solid #ddd;
+          display: block;
+          margin-bottom: .625em;
+        }
+
+        table td {
+          border-bottom: 1px solid #ddd;
+          display: block;
+          font-size: .8em;
+          text-align: right;
+        }
+
+        table td::before {
+          /*
+          * aria-label has no advantage, it won't be read inside a table
+          content: attr(aria-label);
+          */
+          content: attr(data-label);
+          float: left;
+          font-weight: bold;
+          text-transform: uppercase;
+        }
+
+        table td:last-child {
+          border-bottom: 0;
+        }
+      }
       fieldset {
         position: relative;
         /* border: 1px solid rgba(0, 0, 0, 0.1); */
         margin-bottom: 1.2em;
       }
 
-      legend {
-        font-size: 1.3rem;
-        background-color: #000;
+      h2 {
+        font-size: 1.2rem;
+        background-color: #4f4f4f;
         color: #fff;
         padding: 3px 6px;
       }
@@ -38,37 +114,24 @@
   </head>
   <body>
     <header>
-      <h1>🐥 MS Teams Assignments</h1>
     </header>
 
-    <fieldset>
-      <legend>Today's Assignments</legend>
+    <button id="copyButton" type="button">Copy</button>
+    <div id="copyme">
+      <h2>Today's Assignments</h2>
+      <div id="forToday"></div>
 
-      <button id="copyTodayButton" type="button">Copy</button>
-      <pre id="forToday"></pre>
-    </fieldset>
+      <h2>Late Assignments</h2>
+      <div id="forLate"></div>
 
-    <fieldset>
-      <legend>Late Assignments</legend>
+      <h2>Upcoming Assignments</h2>
+      <div id="forUpcoming"></div>
 
-      <button id="copyLateButton" type="button">Copy</button>
-      <pre id="forLate"></pre>
-    </fieldset>
+      <h2>Completed Assignments</h2>
+      <div id="forCompleted"></div>
+    </div>
 
-    <fieldset>
-      <legend>Upcoming Assignments</legend>
-
-      <button id="copyUpcomingButton" type="button">Copy</button>
-      <pre id="forUpcoming"></pre>
-    </fieldset>
-
-    <fieldset>
-      <legend>Completed Assignments</legend>
-
-      <button id="copyCompletedButton" type="button">Copy</button>
-      <pre id="forCompleted"></pre>
-    </fieldset>
-
+    <script src="date.format.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

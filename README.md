@@ -1,8 +1,8 @@
-# assignments-finder
+# homework-frosting
 
 Keep track of your class assignments with `assignments-finder` Chrome extension~~
 
-Available on [Chrome Web Store](https://chrome.google.com/webstore/detail/assignments-finder/xxxxxx).
+Available on [Chrome Web Store](https://chrome.google.com/webstore/detail/homework-frosting/xxxxxx).
 
 # Demos
 
