@@ -28,7 +28,7 @@
         "declarativeContent",
         "activeTab",
         "cookies",
-        "tabs",
+        "activeTab",
         "clipboardWrite"
     ]
 }
