@@ -21,8 +21,6 @@ function fetch_classes(bearer, func) {
     // set response format
     xhr.responseType = 'json';
 
-    //bearer = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IkN0VHVoTUptRDVNN0RMZHpEMnYyeDNRS1NSWSIsImtpZCI6IkN0VHVoTUptRDVNN0RMZHpEMnYyeDNRS1NSWSJ9.eyJhdWQiOiJodHRwczovL29uZW5vdGUuY29tLyIsImlzcyI6Imh0dHBzOi8vc3RzLndpbmRvd3MubmV0L2U1ZjM0NzljLTUwMmYtNGU5Mi1iMDYwLTBjMGM1NjBkNjI3MS8iLCJpYXQiOjE1ODg5NzcyNjAsIm5iZiI6MTU4ODk3NzI2MCwiZXhwIjoxNTg4OTg0NzYwLCJhY3IiOiIxIiwiYWlvIjoiQVNRQTIvOFBBQUFBV2tGRHlOblFHbG5Qc0RqT3JGTW5rbktSZm9Qam9HUUJ6ZzdhdGJCRGh1Yz0iLCJhbXIiOlsicHdkIl0sImFwcGlkIjoiNWUzY2U2YzAtMmIxZi00Mjg1LThkNGItNzVlZTc4Nzg3MzQ2IiwiYXBwaWRhY3IiOiIwIiwiZmFtaWx5X25hbWUiOiJCZXZlcmlkZ2UiLCJnaXZlbl9uYW1lIjoiQnJpYW4iLCJpcGFkZHIiOiI3My4yNDEuNTUuMjE3IiwibmFtZSI6IkJyaWFuIEJldmVyaWRnZSIsIm9pZCI6ImU5Y2FkNzRiLWZkOGEtNDQ4OC1hZWRlLTk2OTQyZTczNThiMyIsIm9ucHJlbV9zaWQiOiJTLTEtNS0yMS0xMzU5MzIyNzE2LTE3MzIxNzQyNjItMzU5NTU2MTY1LTE3Njg3NCIsInB1aWQiOiIxMDAzMjAwMEE0MjhCNkY5Iiwic2NwIjoiTm90ZXMuUmVhZFdyaXRlIE5vdGVzLlJlYWRXcml0ZS5BbGwiLCJzdWIiOiJVVldqbEJGT0xLQkFPdk0yeG02WDZqSmtFakU5NkZhY1BGX3R3VFJlcGdvIiwidGlkIjoiZTVmMzQ3OWMtNTAyZi00ZTkyLWIwNjAtMGMwYzU2MGQ2MjcxIiwidW5pcXVlX25hbWUiOiJCU1YtOFcyQGJhc2lzaW5kZXBlbmRlbnQuY29tIiwidXBuIjoiQlNWLThXMkBiYXNpc2luZGVwZW5kZW50LmNvbSIsInV0aSI6Ik9wX1BfUzY3aWt5aTJrdkk1UUlsQUEiLCJ2ZXIiOiIxLjAifQ.DjnZISSyTpgJakWIPJs4FaifQNXiY86b4pDYfYPAQfHL-ZTADLVrzuNDDONyj3klTSg6I09ZIJOLBnw8ARJWqXpIAllMHKAthBJ1g7JoYx9L_20oREXkY4T_SVjxn7qcQqNB0sMSpOpv3aRzQoM6QH6SRliGuH7V8rp9rx3FkyCA1u4zGdK8jadvzVrIFBz0RjbImxZR_o6byW7K8L-7UjuUQKuyNU6SbOkdrUfBT3LPaRQcGgjGysdZEprpzdFsbSv2BdOEL8doH2LDCQH1bwLKv_KM-4dDahehOe-ACmgLCRIjl8CBdlEVBMrsKSVJBZ2Jqx_lrwhFPhxPnoI-Cw';
-
     xhr.setRequestHeader('Authorization', "Bearer " + bearer);
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.setRequestHeader('Accept', '*/*'); // accept all
@@ -49,7 +47,6 @@ async function fetch_all_with_bearer(bearer, classes) {
         'Accept': '*/*',
         credentials: "include"
     };
-    //console.log(JSON.stringify(classes, null, 4));
 
     const indices = Array.from({length: classes.length}, (x,i) => i);
     //const indices = [4, 5];
@@ -167,7 +164,7 @@ function has_rework(submissions) {
 
 function create_row(classname, assignment) {
     const nowIso = new Date().toISOString();
-    console.log(classname + "|" + assignment.displayName + "|" + assignment.dueDate + "|" + nowIso);
+    //console.log(classname + "|" + assignment.displayName + "|" + assignment.dueDate + "|" + nowIso);
     row = {
         id: assignment.id,
         classname: classname,
@@ -208,7 +205,7 @@ async function build(bearer) {
     fetch_classes(bearer, async function(classes) {
         jsons = await fetch_all_with_bearer(bearer, classes);
         coll = create_rows_from_class_map(jsons);
-        console.log(JSON.stringify(coll, null, 4));
+        //console.log(JSON.stringify(coll, null, 4));
         chrome.storage.local.set({ data: coll }, function() {
             chrome.windows.create({
                 // Just use the full URL if you need to open an external page
@@ -231,7 +228,6 @@ function generate_report() {
 if (!!chrome.runtime) {
     // https://developer.chrome.com/extensions/getstarted
     chrome.runtime.onInstalled.addListener(function() {
-        console.log("onInstalled 1");
 
         chrome.browserAction.onClicked.addListener(function(tab) {
             //state is off, on, init. Storage monitoring is only active if "on".
