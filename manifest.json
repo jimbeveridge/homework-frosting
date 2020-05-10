@@ -1,10 +1,11 @@
 {
-    "name": "Homework Vision for Microsoft Teams",
+    "name": "Homework Frosting for Microsoft Teams",
     "version": "0.0.1",
     "manifest_version": 2,
-    "description": "Extract homework assignments from Microsoft Teams. You must click the button while you are in Teams in your Chrome browser.",
+    "description": "Extract homework assignments from Microsoft Teams. Click the cupcake button while you are in Teams in your Chrome browser.",
     "icons": {
         "16": "icons/icon16.png",
+        "32": "icons/icon32.png",
         "48": "icons/icon48.png",
         "128": "icons/icon128.png"
     },
