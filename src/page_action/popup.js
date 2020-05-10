@@ -234,7 +234,7 @@ async function render_table_from_storage() {
     chrome.storage.local.get("data", function(local) {
         chrome.storage.sync.get("filter", function(obj) {
             let filter = "";
-            if (obj != null && obj != "") filter = obj.filter;
+            if (obj != null && obj.filter != null) filter = obj.filter;
             render(local.data.rows, local.data.updated, filter);
         });
     });

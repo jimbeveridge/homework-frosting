@@ -15,7 +15,7 @@ window.onload = function() {
     el.placeholder = "EXTRA CREDIT\nmacinerny";
 
     chrome.storage.sync.get("filter", function(obj) {
-        if (obj != null && obj != "") {
+        if (obj != null && obj.filter != null) {
             el.value = obj.filter;
         }
     });
