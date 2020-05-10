@@ -1,10 +1,10 @@
 {
-  "name": "Assignments Finder",
+  "name": "Homework Frosting",
   "version": "0.0.1",
-  "description": "Extract and organize assignments from Microsoft Teams for education",
+  "description": "Extract and organize assignments from Microsoft Teams for Education",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jimbeveridge/assignments-finder.git"
+    "url": "https://github.com/jimbeveridge/homework-frosting.git"
   },
   "keywords": ["education", "Microsoft Teams", "assignments", "homework", "classes"],
   "author": "Jim Beveridge",

@@ -209,7 +209,7 @@ async function build(bearer) {
         chrome.storage.local.set({ data: coll }, function() {
             chrome.windows.create({
                 // Just use the full URL if you need to open an external page
-                url: chrome.runtime.getURL("src/page_action/page_action.html")
+                url: chrome.runtime.getURL("page_action/page_action.html")
             });
         });
     });

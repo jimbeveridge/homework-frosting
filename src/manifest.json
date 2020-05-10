@@ -11,10 +11,10 @@
     },
     "default_locale": "en",
     "background": {
-        "page": "src/bg/background.html",
+        "page": "bg/background.html",
         "persistent": false
     },
-    "options_page": "src/options/options.html",
+    "options_page": "options/options.html",
     "page_action": {
         "default_icon": "icons/icon19.png",
         "default_title": "Assignments Finder"
