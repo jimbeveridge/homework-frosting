@@ -176,7 +176,18 @@ function daysDiff(dt1, dt2) {
     return daysDiff;
 }
 
-function render(rows, updated) {
+// If any of the words in `filters` appears in item.name,
+// then this is skipped.
+function is_skipped(name, filters) {
+    for (let i=0; i<filters.length; i++) {
+        if (name.toLowerCase().indexOf(filters[i].toLowerCase()) != -1) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function render(rows, updated, filter) {
     for (let i = 0; i < rows.length; i++) {
         let el = rows[i];
         el.name = "<b>" + el.name + "</b>";
@@ -200,7 +211,8 @@ function render(rows, updated) {
     rows = rows.sort(compareDueDateTime);
 
     // TODO Issue #
-    //rows = rows.filter((item) => !item.name.includes('Name1') && !item.name.includes('Name2'));
+    const filters = filter.split("\n");
+    rows = rows.filter((item) => !is_skipped(item.name + " " + item.classname, filters));
 
     let headings = ["classname", "name", "due", "points"];
 
@@ -218,9 +230,13 @@ function render(rows, updated) {
     CreateTableFromJSON(document, wanted, headings, "forCompleted");
 }
 
-function render_table_from_storage() {
-    chrome.storage.local.get("data", function(obj) {
-        render(obj.data.rows, obj.data.updated);
+async function render_table_from_storage() {
+    chrome.storage.local.get("data", function(local) {
+        chrome.storage.sync.get("filter", function(obj) {
+            let filter = "";
+            if (obj != null && obj != "") filter = obj.filter;
+            render(local.data.rows, local.data.updated, filter);
+        });
     });
 }
 
