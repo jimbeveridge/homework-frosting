@@ -1,6 +1,8 @@
 # homework-frosting
 
-Keep track of your class assignments with `assignments-finder` Chrome extension~~
+![Homework Frosting icon](./img/cupcake64.png)
+
+Keep track of your class assignments with `homework-frosting` Chrome extension~~
 
 Available on [Chrome Web Store](https://chrome.google.com/webstore/detail/homework-frosting/xxxxxx).
 
