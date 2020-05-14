@@ -4,7 +4,7 @@
 
 Keep track of your class assignments with `homework-frosting` Chrome extension~~
 
-Available on [Chrome Web Store](https://chrome.google.com/webstore/detail/homework-frosting/xxxxxx).
+Available on [Chrome Web Store](https://chrome.google.com/webstore/detail/homework-frosting/gafaloklklbihonmgghmaapnhaddpcmf).
 
 Microsoft Teams makes assignments very hard to find. You have to click through to each class,
 then you have to click "load more" possibly multiple times on each page. You have to manually
