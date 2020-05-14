@@ -1,4 +1,3 @@
-
 const classesUrl = 'https://assignments.onenote.com/api/v1.0/edu/me/classes';
 
 // Local storage
@@ -13,42 +12,94 @@ const adalExp = "adal.expiration.keyhttps://onenote.com/";
 //     });
 // }
 
-function fetch_classes(bearer, func) {
-    const xhr = new XMLHttpRequest();
+// Note that response.statusText will often be empty because
+// HTTP/2 does not define a way to carry the version or reason
+// phrase that is included in an HTTP/1.1 status line.
+const parseAPIResponse = response =>
+    new Promise(resolve => resolve(response.text()))
+    .catch(err =>
+        // eslint-disable-next-line prefer-promise-reject-errors
+        Promise.reject({
+            type: 'NetworkError',
+            status: response.status,
+            message: err,
+            url: response.url,
+        }))
+    .then((responseBody) => {
 
-    xhr.open('GET', classesUrl);
+        if (!response.ok) {
+            return Promise.reject({
+                type: 'HttpError',
+                status: response.status,
+                body: responseBody,
+                url: response.url,
+            });
+        }
 
-    // set response format
-    xhr.responseType = 'json';
+        // Attempt to parse JSON
+        try {
+            const parsedJSON = JSON.parse(responseBody);
+            if (response.ok) {
+                return parsedJSON;
+            } else {
+                return Promise.reject({
+                    type: 'HttpError',
+                    status: response.status,
+                    body: responseBody,
+                    url: response.url,
+                });
+            }
+        } catch (e) {
+            // If we got an HTML page, truncate it.
+            let body = response.statusText.substr(0, 500);
 
-    xhr.setRequestHeader('Authorization', "Bearer " + bearer);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.setRequestHeader('Accept', '*/*'); // accept all
-    xhr.send();
+            // We should never get these unless response is mangled
+            // Or API is not properly implemented
+            // eslint-disable-next-line prefer-promise-reject-errors
+            return Promise.reject({
+                type: 'InvalidJSON',
+                status: response.status,
+                body: body,
+                url: response.url,
+            });
+        }
+    });
 
-    xhr.onload = () => {
-        // get JSON response
-        const obj = xhr.response;
-        const classes = obj.value;
-        func(classes, bearer, func);
-    }
+async function do_fetch(url, headers) {
+    const json = await fetch(url, { headers: headers })
+        .then(parseAPIResponse);
+    //.catch(err => alert(JSON.stringify(err, null, 4)));
+}
+
+async function do_fetch_with_bearer(url, bearer) {
+
+    const headers = {
+        'Content-Type': 'application/json',
+        Authorization: "Bearer " + bearer,
+        Accept: 'application/json',
+        credentials: "include"
+    };
+
+    const json = await fetch(url, { headers: headers })
+        .then(parseAPIResponse);
+    //.catch(err => alert(JSON.stringify(err, null, 4)));
+    return json;
+}
+
+async function fetch_classes(bearer) {
+    return await do_fetch_with_bearer(classesUrl, bearer);
 }
 
 function make_url(classes, i) {
     let oneclass = classes[i];
-    return "https://assignments.onenote.com//api/v1.0/edu/classes/" + oneclass.id + "/assignments";
+    return "https://assignments.onenote.com//api/v1.0/edu/classes/" + oneclass.id +
+        //"/assignments";
+        "/assignments?$select=classId,displayName,dueDateTime,assignedDateTime,allowLateSubmissions,lastModifiedDateTime,status,statusreason,isCompleted,id,instructions,grading,submissions&$expand=submissions";
 }
 
 async function fetch_all_with_bearer(bearer, classes) {
 
-    const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': "Bearer " + bearer,
-        'Accept': '*/*',
-        credentials: "include"
-    };
-
-    const indices = Array.from({length: classes.length}, (x,i) => i);
+    const indices = Array.from({ length: classes.length }, (x, i) => i);
     //const indices = [4, 5];
 
     let mapper = {};
@@ -60,10 +111,14 @@ async function fetch_all_with_bearer(bearer, classes) {
 
     for (let i = 0; i < indices.length; i++) {
         const index = indices[i];
-        jsons[classes[index].name] = await fetch(make_url(classes, index), { headers: headers })
-            .then(checkStatus)
-            .then((response) => response.json())
-            .catch(error => console.log('There was a problem!', error));
+        // const json = await fetch(make_url(classes, index), { headers: headers })
+        //     .then(checkStatus)
+        //     .then(response => response.json())
+        //     .catch(error => console.log('There was a problem!', error));
+
+        //const json = await fetch(make_url(classes, index), { headers: headers })
+        //    .then(parseAPIResponse(response));
+        jsons[classes[index].name] = await do_fetch_with_bearer(make_url(classes, index), bearer);
     }
 
     for (var classname of Object.keys(jsons)) {
@@ -191,9 +246,9 @@ function create_row(classname, assignment) {
 }
 
 function create_rows_from_class_map(object) {
-    let rows = [];
+    const rows = [];
     for (var classname of Object.keys(object)) {
-        let assignments = object[classname];
+        const assignments = object[classname];
         for (let i = 0; i < assignments.length; i++) {
             let row = create_row(classname, assignments[i]);
             rows.push(row);
@@ -212,17 +267,59 @@ function index_assignments(assignments) {
     return coll;
 }
 
-async function build(bearer) {
-    fetch_classes(bearer, async function(classes) {
-        jsons = await fetch_all_with_bearer(bearer, classes);
+async function build(pair) {
+    if (pair == null || pair.length != 1 || pair[0].length != 2) {
+        console.log("Remote code failed");
+    }
+
+    let neterror = null;
+
+    const bearer = pair[0][0];
+    // const exp = pair[0][1];
+    // const now = new Date() / 1000;
+
+    // if (exp < now) {
+    //     console.log("Auth has expired");
+    //     neterror = {
+    //         type: 'AuthError',
+    //         status: 401,
+    //         body: responseBody,
+    //         url: response.url,
+    //     }
+    // }
+
+    let classes = await fetch_classes(bearer)
+        .catch(err => neterror = err);
+
+    let jsons = null;
+    if (neterror == null) {
+        jsons = await fetch_all_with_bearer(bearer, classes.value)
+            .catch(err => neterror = err);
+    }
+
+    if (neterror instanceof Error) {
+        neterror = {
+            type: 'NetworkError',
+            status: 0,
+            message: neterror.message,
+            url: "",
+        };
+    }
+
+    let kv = null;
+    if (neterror == null) {
         coll = create_rows_from_class_map(jsons);
         //console.log(JSON.stringify(coll, null, 4));
         const now = new Date();
-        chrome.storage.local.set({ data: { rows: coll, updated: now.toISOString() } }, function() {
-            chrome.windows.create({
-                // Just use the full URL if you need to open an external page
-                url: chrome.runtime.getURL("page_action/page_action.html")
-            });
+        kv = { data: { rows: coll, updated: now.toISOString() } };
+    } else {
+        kv = { error: neterror };
+    }
+
+    chrome.storage.local.set(kv, function() {
+        chrome.windows.create({
+            // Just use the full URL if you need to open an external page
+            url: chrome.runtime.getURL("page_action/page_action.html")
         });
     });
 }
@@ -232,7 +329,7 @@ function generate_report() {
     chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
         const tab = tabs[0];
         // Execute script in the current tab
-        chrome.tabs.executeScript(tab.id, { code: `localStorage['${adalKey}']` }, build);
+        chrome.tabs.executeScript(tab.id, { code: `[ localStorage['${adalKey}'], localStorage['${adalExp}'] ]` }, build);
     });
 }
 
@@ -242,7 +339,10 @@ if (!!chrome.runtime) {
     chrome.runtime.onInstalled.addListener(function() {
 
         chrome.pageAction.onClicked.addListener(function(tab) {
-            generate_report();
+            //chrome.storage.local.remove("error", function() {
+            chrome.storage.local.clear(function() {
+                generate_report();
+            });
         });
 
         // https://assignments.onenote.com/sections/classroom

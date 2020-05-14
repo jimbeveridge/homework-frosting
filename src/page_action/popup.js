@@ -225,7 +225,7 @@ function render(rows, updated, filter) {
     rows = rows.sort(compareDueDateTime);
 
     // TODO Issue #
-    let filters = filter.split("\n");
+    let filters = filter.trim().split("\n");
     for (let i=0; i<filters.length; i++) {
         if (filters[i].trim() == "")
             filters[i] = "";
@@ -249,8 +249,13 @@ function render(rows, updated, filter) {
 }
 
 async function render_table_from_storage() {
+    document.getElementById("report").style.display = "initial";
+    document.getElementById("autherror").style.display = "none";
+    document.getElementById("neterror").style.display = "none";
+
     chrome.storage.local.get("data", function(local) {
         chrome.storage.sync.get("options", function(obj) {
+            //alert(JSON.stringify(local, null, 4));
             let filter = "";
             let options = obj.options;
             if (options != null && options.filter != null) filter = options.filter;
@@ -259,7 +264,31 @@ async function render_table_from_storage() {
     });
 }
 
-render_table_from_storage();
+function render_error(err) {
+    //alert(JSON.stringify(err, null, 4));
+    document.getElementById("report").style.display = "none";
+    const autherror = document.getElementById("autherror");
+    const neterror = document.getElementById("neterror");
+
+    if (err.status == 401) {
+        neterror.style.display = "none";
+        autherror.style.display = "initial";
+        //document.getElementById("report")
+    } else {
+        neterror.style.display = "initial";
+        autherror.style.display = "none";
+        document.getElementById("errmessage").innerText = JSON.stringify(err, null, 4);
+    }
+}
+
+chrome.storage.local.get("error", function(obj) {
+    if (obj != null && Object.keys(obj).length !== 0) {
+        render_error(obj.error);
+    } else {
+        render_table_from_storage();
+    }
+});
+
 
 // let rows = obj.rows;
 

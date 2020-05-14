@@ -161,6 +161,7 @@
     </header>
 
     <h1><img src="icon32.png"/> Homework Frosting</h1>
+    <div id="report">
     <div class="updated">Updated <span id="updated"></span></div>
 
     <button id="copyButton" type="button">Copy to Clipboard</button>
@@ -176,6 +177,27 @@
 
       <h2>Completed Assignments</h2>
       <div id="forCompleted"></div>
+    </div>
+    </div>
+
+    <div id="autherror" style="display: none;">
+      <h2>Please refresh your Teams tab</h2>
+      Your report could not be created. The authentication information
+      for teams.microsoft.com is missing or expired. Please follow these steps:
+      <ol>
+        <li>Go to <a href="https://teams.microsoft.com">https://teams.microsoft.com</a></li>
+        <li>Sign in, if necessary</li>
+        <li>Click on Assignments in the far left navigation bar</li>
+        <li>Select a class and click the Done button</li>
+        <li>Click the cupcake icon in the top right</li>
+        <li>Wait about ten seconds and the report will be displayed</li>
+      </ol>
+    </div>
+
+    <div id="neterror" style="display: none;">
+      <h2>Web site error</h2>
+      <p>Unexpected error downloading assignments from Microsoft Teams.</p>
+      <pre id="errmessage"></pre>
     </div>
 
     <script src="date.format.js"></script>
