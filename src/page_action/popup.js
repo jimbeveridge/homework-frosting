@@ -75,6 +75,11 @@ function generateTableHead(table, data) {
     for (let key of data) {
         let th = document.createElement("th");
         th.className = key;
+
+        if (key == "points") {
+            th.setAttribute("data-sort-method", "number");
+        }
+
         let text = document.createTextNode(key);
         th.appendChild(text);
         row.appendChild(th);
@@ -107,13 +112,20 @@ function CreateTableFromJSON(doc, myBooks, col, id) {
         tr = table.insertRow();
 
         for (let j = 0; j < col.length; j++) {
+            const key = col[j];
             let tabCell = tr.insertCell(-1);
-            if (col[j] in myBooks[i]) {
-                data = myBooks[i][col[j]];
+            tabCell.className = key;
+            if (key in myBooks[i]) {
+                data = myBooks[i][key];
                 if (data === false) data = "-";
                 if (data === true) date = "<b>&#x2713;</b>";
 
                 tabCell.innerHTML = data;
+
+                const iso = key + "DateTime";
+                if (iso in myBooks[i]) {
+                    tabCell.setAttribute("data-sort", myBooks[i][iso]);
+                }
             }
         }
     }
@@ -125,6 +137,8 @@ function CreateTableFromJSON(doc, myBooks, col, id) {
     var divContainer = doc.getElementById(id);
     divContainer.innerHTML = "";
     divContainer.appendChild(table);
+
+    new Tablesort(table);
 }
 
 // Reverse sort
@@ -150,6 +164,22 @@ function compareDueDateTime(a, b) {
 
     if ("dueDateTime" in a) bandA = a.dueDateTime;
     if ("dueDateTime" in b) bandB = b.dueDateTime;
+
+    let comparison = 0;
+    if (bandA > bandB) {
+        comparison = 1;
+    } else if (bandA < bandB) {
+        comparison = -1;
+    }
+    return comparison;
+}
+
+function compareClassName(a, b) {
+    let bandA = "";
+    let bandB = "";
+
+    if ("classname" in a) bandA = a.classname;
+    if ("classname" in b) bandB = b.classname;
 
     let comparison = 0;
     if (bandA > bandB) {
@@ -202,11 +232,10 @@ function render(rows, updated, filter) {
 
     for (let i = 0; i < rows.length; i++) {
         let el = rows[i];
-        el.name = "<b>" + el.name + "</b>";
         el.today = is_today(el.dueDateTime);
         el.late = el.dueDateTime < nowIso && (!el.completed || el.missingSubmission);
-        el.due = dateFormat(new Date(el.dueDateTime), "ddd, mmm dS, h:MM TT")
-        el.submitted = el.submittedDateTime != "" ? dateFormat(new Date(el.submittedDateTime), "ddd, mmm dS, h:MM TT") : "";
+        el.due = dateFormat(new Date(el.dueDateTime), "ddd, mmm d, h:MM TT")
+        el.submitted = el.submittedDateTime != "" ? dateFormat(new Date(el.submittedDateTime), "ddd, mmm d, h:MM TT") : "";
         if ("rework" in el) {
             if (el.rework) {
                 el.today = true;
@@ -215,7 +244,7 @@ function render(rows, updated, filter) {
             }
         }
         if (el.completed && hoursDiff(el.submittedDateTime, updated) < 24) {
-            el.submitted += " &#11088;";
+            el.name += " &#11088;";
         }
     }
 
@@ -234,7 +263,7 @@ function render(rows, updated, filter) {
 
     let headings = ["classname", "name", "due", "points"];
 
-    var wanted = rows.filter((item) => item.today);
+    var wanted = rows.filter((item) => item.today && !item.completed && !item.late);
     CreateTableFromJSON(document, wanted, headings, "forToday");
 
     wanted = rows.filter((item) => item.late);
@@ -244,7 +273,7 @@ function render(rows, updated, filter) {
     CreateTableFromJSON(document, wanted, headings, "forUpcoming");
 
     headings = ["classname", "name", "submitted", "points"];
-    wanted = rows.filter((item) => item.completed && !item.late).sort(compareSubmittedDateTime);;
+    wanted = rows.filter((item) => item.completed && !item.late).sort(compareSubmittedDateTime);
     CreateTableFromJSON(document, wanted, headings, "forCompleted");
 }
 
