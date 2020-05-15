@@ -339,8 +339,7 @@ if (!!chrome.runtime) {
     chrome.runtime.onInstalled.addListener(function() {
 
         chrome.pageAction.onClicked.addListener(function(tab) {
-            //chrome.storage.local.remove("error", function() {
-            chrome.storage.local.clear(function() {
+            chrome.storage.local.remove("error", function() {
                 generate_report();
             });
         });
