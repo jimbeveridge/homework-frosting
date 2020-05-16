@@ -4,6 +4,8 @@ const classesUrl = 'https://assignments.onenote.com/api/v1.0/edu/me/classes';
 const adalKey = "adal.access.token.keyhttps://onenote.com/";
 const adalExp = "adal.expiration.keyhttps://onenote.com/";
 
+let report_window = null;
+
 // function getCookies(domain, name, callback) {
 //     chrome.cookies.get({ "url": domain, "name": name }, function(cookie) {
 //         if (callback) {
@@ -93,8 +95,7 @@ async function fetch_classes(bearer) {
 function make_url(classes, i) {
     let oneclass = classes[i];
     return "https://assignments.onenote.com//api/v1.0/edu/classes/" + oneclass.id +
-        //"/assignments";
-        "/assignments?$select=classId,displayName,dueDateTime,assignedDateTime,allowLateSubmissions,lastModifiedDateTime,status,statusreason,isCompleted,id,instructions,grading,submissions&$expand=submissions";
+        "/assignments?$select=classId,displayName,dueDateTime,assignedDateTime,allowLateSubmissions,createdDateTime,lastModifiedDateTime,status,statusreason,isCompleted,id,instructions,grading,submissions&$expand=submissions";
 }
 
 async function fetch_all_with_bearer(bearer, classes) {
@@ -108,86 +109,35 @@ async function fetch_all_with_bearer(bearer, classes) {
     }
 
     let jsons = {};
+    let promises = [];
 
     for (let i = 0; i < indices.length; i++) {
         const index = indices[i];
-        // const json = await fetch(make_url(classes, index), { headers: headers })
-        //     .then(checkStatus)
-        //     .then(response => response.json())
-        //     .catch(error => console.log('There was a problem!', error));
+        const classname = classes[index].name;
+        const promise = do_fetch_with_bearer(make_url(classes, index), bearer)
+            .then(result => {
+                jsons[classname] = result.value;
+                for (let i = 0; i < promises.length; i++) {
+                    if (promises[i] === promise) {
+                        promises.splice(i, 1);
+                        break;
+                    }
+                }
+            });
+        promises.push(promise);
 
-        //const json = await fetch(make_url(classes, index), { headers: headers })
-        //    .then(parseAPIResponse(response));
-        jsons[classes[index].name] = await do_fetch_with_bearer(make_url(classes, index), bearer);
+        // Once we hit our concurrency limit, wait for a promise to resolve
+        // before continuing so as to cap the number of outstanding requests.
+        if (promises.length >= 4) {
+            await Promise.race(promises);
+        }
     }
 
-    for (var classname of Object.keys(jsons)) {
-        jsons[classname] = jsons[classname].value;
-    }
+    await Promise.all([...promises]);
 
     return jsons;
-
-    // We rate limit it to avoid 429 errors. Using Promise.all() makes
-    // too many requests. We can probably do three requests at a time,
-    // but that's harder.
-    // indices.reduce((previousPromise, i) => {
-    //     return previousPromise.then(() => {
-    //         return fetch(make_url(classes, i), { headers: headers })
-    //             .then(checkStatus)
-    //             .then(function(response) {
-    //                 const json = response.json();
-    //                 jsons[mapper[json.classId]] = json;
-    //                 console.log(JSON.stringify(response, null, 4));
-    //                 if (Object.keys(jsons).length == indices.length) func(jsons);
-    //                 return response.json;
-    //             })
-    //             .catch(error => console.log('There was a problem!', error))
-    //     });
-    // }, Promise.resolve());
 }
 
-// ------------------------------------------
-//  HELPER FUNCTIONS
-// ------------------------------------------
-
-function checkStatus(response) {
-    if (response.ok) {
-        return Promise.resolve(response);
-    } else {
-        return Promise.reject(new Error(response.statusText));
-    }
-}
-
-function parseJSON(response) {
-    return response.json();
-}
-
-
-// function fetch_assignments_for_class(bearer, oneclass) {
-//     const xhr = new XMLHttpRequest();
-
-//     const url = "https://assignments.onenote.com//api/v1.0/edu/classes/" + oneclass.id + "/assignments";
-
-//     xhr.open('GET', url);
-
-//     // set response format
-//     xhr.responseType = 'json';
-
-//     //bearer = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IkN0VHVoTUptRDVNN0RMZHpEMnYyeDNRS1NSWSIsImtpZCI6IkN0VHVoTUptRDVNN0RMZHpEMnYyeDNRS1NSWSJ9.eyJhdWQiOiJodHRwczovL29uZW5vdGUuY29tLyIsImlzcyI6Imh0dHBzOi8vc3RzLndpbmRvd3MubmV0L2U1ZjM0NzljLTUwMmYtNGU5Mi1iMDYwLTBjMGM1NjBkNjI3MS8iLCJpYXQiOjE1ODg5NzcyNjAsIm5iZiI6MTU4ODk3NzI2MCwiZXhwIjoxNTg4OTg0NzYwLCJhY3IiOiIxIiwiYWlvIjoiQVNRQTIvOFBBQUFBV2tGRHlOblFHbG5Qc0RqT3JGTW5rbktSZm9Qam9HUUJ6ZzdhdGJCRGh1Yz0iLCJhbXIiOlsicHdkIl0sImFwcGlkIjoiNWUzY2U2YzAtMmIxZi00Mjg1LThkNGItNzVlZTc4Nzg3MzQ2IiwiYXBwaWRhY3IiOiIwIiwiZmFtaWx5X25hbWUiOiJCZXZlcmlkZ2UiLCJnaXZlbl9uYW1lIjoiQnJpYW4iLCJpcGFkZHIiOiI3My4yNDEuNTUuMjE3IiwibmFtZSI6IkJyaWFuIEJldmVyaWRnZSIsIm9pZCI6ImU5Y2FkNzRiLWZkOGEtNDQ4OC1hZWRlLTk2OTQyZTczNThiMyIsIm9ucHJlbV9zaWQiOiJTLTEtNS0yMS0xMzU5MzIyNzE2LTE3MzIxNzQyNjItMzU5NTU2MTY1LTE3Njg3NCIsInB1aWQiOiIxMDAzMjAwMEE0MjhCNkY5Iiwic2NwIjoiTm90ZXMuUmVhZFdyaXRlIE5vdGVzLlJlYWRXcml0ZS5BbGwiLCJzdWIiOiJVVldqbEJGT0xLQkFPdk0yeG02WDZqSmtFakU5NkZhY1BGX3R3VFJlcGdvIiwidGlkIjoiZTVmMzQ3OWMtNTAyZi00ZTkyLWIwNjAtMGMwYzU2MGQ2MjcxIiwidW5pcXVlX25hbWUiOiJCU1YtOFcyQGJhc2lzaW5kZXBlbmRlbnQuY29tIiwidXBuIjoiQlNWLThXMkBiYXNpc2luZGVwZW5kZW50LmNvbSIsInV0aSI6Ik9wX1BfUzY3aWt5aTJrdkk1UUlsQUEiLCJ2ZXIiOiIxLjAifQ.DjnZISSyTpgJakWIPJs4FaifQNXiY86b4pDYfYPAQfHL-ZTADLVrzuNDDONyj3klTSg6I09ZIJOLBnw8ARJWqXpIAllMHKAthBJ1g7JoYx9L_20oREXkY4T_SVjxn7qcQqNB0sMSpOpv3aRzQoM6QH6SRliGuH7V8rp9rx3FkyCA1u4zGdK8jadvzVrIFBz0RjbImxZR_o6byW7K8L-7UjuUQKuyNU6SbOkdrUfBT3LPaRQcGgjGysdZEprpzdFsbSv2BdOEL8doH2LDCQH1bwLKv_KM-4dDahehOe-ACmgLCRIjl8CBdlEVBMrsKSVJBZ2Jqx_lrwhFPhxPnoI-Cw';
-
-//     xhr.setRequestHeader('Authorization', "Bearer " + bearer);
-//     xhr.setRequestHeader('Content-Type', 'application/json');
-//     xhr.setRequestHeader('Accept', '*/*'); // accept all
-//     xhr.send();
-
-//     xhr.onload = () => {
-//         // get JSON response
-//         const obj = xhr.response;
-//         const classes = obj.value;
-//         console.log(JSON.stringify(classes, null, 4));
-//         return classes;
-//     }
-// }
 
 function get_assignments(classes) {
     let info = [];
@@ -233,6 +183,8 @@ function get_latest(coll, key) {
 function create_row(classname, assignment) {
     row = {
         id: assignment.id,
+        lastModifiedDateTime: assignment.lastModifiedDateTime,
+        createdDateTime: assignment.createdDateTime,
         classname: classname,
         dueDateTime: assignment.dueDateTime,
         submittedDateTime: get_latest(assignment.submissions, "submittedDateTime"),
@@ -267,26 +219,43 @@ function index_assignments(assignments) {
     return coll;
 }
 
+function create_window() {
+    chrome.windows.create({
+        // Just use the full URL if you need to open an external page
+        url: chrome.runtime.getURL("page_action/page_action.html")
+    }, wnd => report_window = wnd);
+}
+
 async function build(pair) {
+    if (report_window == null) {
+        create_window();
+    } else {
+        // chrome.tabs.getAllInWindow(report_window.id, function (tabs) {
+        //     if (chrome.extension.lastError != null) {
+        //         create_window();
+        //     }
+        // });
+        chrome.tabs.update(report_window.tabs[0].id, {highlighted: true}, function (e) {
+            if (chrome.extension.lastError != null) {
+                create_window();
+            }
+        });
+    }
+
     if (pair == null || pair.length != 1 || pair[0].length != 2) {
         console.log("Remote code failed");
+        return;
     }
 
     let neterror = null;
 
     const bearer = pair[0][0];
+
+    // We don't use the expired information we got from storage because
+    // (I think?) the time could be far enough off to cause problems.
     // const exp = pair[0][1];
     // const now = new Date() / 1000;
 
-    // if (exp < now) {
-    //     console.log("Auth has expired");
-    //     neterror = {
-    //         type: 'AuthError',
-    //         status: 401,
-    //         body: responseBody,
-    //         url: response.url,
-    //     }
-    // }
 
     let classes = await fetch_classes(bearer)
         .catch(err => neterror = err);
@@ -317,10 +286,6 @@ async function build(pair) {
     }
 
     chrome.storage.local.set(kv, function() {
-        chrome.windows.create({
-            // Just use the full URL if you need to open an external page
-            url: chrome.runtime.getURL("page_action/page_action.html")
-        });
     });
 }
 
@@ -340,7 +305,9 @@ if (!!chrome.runtime) {
 
         chrome.pageAction.onClicked.addListener(function(tab) {
             chrome.storage.local.remove("error", function() {
-                generate_report();
+                chrome.storage.local.remove("data", function() {
+                    generate_report();
+                });
             });
         });
 

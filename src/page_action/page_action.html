@@ -3,6 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <link href="https://fonts.googleapis.com/css2?family=Modak&display=swap" rel="stylesheet">
+    <link href="spinkit.min.css" rel="stylesheet">
+
     <style>
       body {
         line-height: 1.15;
@@ -28,7 +30,18 @@
           font-size: 130%;
           font-weight: bold;
           margin-bottom: 0.5rem;
-        }
+      }
+
+      .sk-bounce-dot {
+        background-color: white;
+      }
+
+      .sk-bounce {
+        margin: 0;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+      }
 
       table {
         border: 1px solid #ccc;
@@ -212,26 +225,35 @@
   </head>
   <body>
     <header>
+      <h1><img src="icon32.png"/> Homework Frosting</h1>
     </header>
 
-    <h1><img src="icon32.png"/> Homework Frosting</h1>
-    <div id="report">
-    <div class="updated">Updated <span id="updated"></span></div>
-
-    <button id="copyButton" type="button">Copy to Clipboard</button>
-    <div id="copyme">
-      <h2>Today's Assignments</h2>
-      <div id="forToday"></div>
-
-      <h2>Late Assignments</h2>
-      <div id="forLate"></div>
-
-      <h2>Upcoming Assignments</h2>
-      <div id="forUpcoming"></div>
-
-      <h2>Completed Assignments</h2>
-      <div id="forCompleted"></div>
+    <div id="loading" style="margin: 10px -4px 0 -8px; background-color: #7E55D6; width:100vw; height: 90vh;">
+      <div class="updated">Updating...</div>
+      <div class="sk-bounce">
+        <div class="sk-bounce-dot"></div>
+        <div class="sk-bounce-dot"></div>
+      </div>
     </div>
+
+    <div id="report" style="display: none;">
+      <div class="updated">Updated <span id="updated"></span></div>
+
+      <button id="copyButton" type="button">Copy to Clipboard</button>
+
+      <div id="copyme">
+        <h2>Today's Assignments</h2>
+        <div id="forToday"></div>
+
+        <h2>Late Assignments</h2>
+        <div id="forLate"></div>
+
+        <h2>Upcoming Assignments</h2>
+        <div id="forUpcoming"></div>
+
+        <h2>Completed Assignments</h2>
+        <div id="forCompleted"></div>
+      </div>
     </div>
 
     <div id="autherror" style="display: none;">
@@ -254,7 +276,6 @@
       <pre id="errmessage"></pre>
     </div>
 
-    <script src='tablesort.number.js'></script>
     <script src="tablesort.min.js"></script>
     <script src="date.format.js"></script>
     <script src="popup.js"></script>

@@ -195,9 +195,13 @@ function render(rows, updated, filter) {
             }
         }
 
-
+        // Yellow star emoji if completed within last 24 hours
         if (el.completed && hoursDiff(el.submittedDateTime, updated) < 24) {
-            el.name += " &#11088;";
+            el.name += ` <span title="Completed recently">&#11088;</span>`;
+        }
+        // Fire emoji if created within last 24 hours and NOT completed
+        if (!el.completed && hoursDiff(el.createdDateTime, nowIso) < 24) {
+            el.name += `&nbsp;&nbsp;<span title="New assignment">&#x1f525;</span>`;
         }
     }
 
@@ -229,13 +233,19 @@ function render(rows, updated, filter) {
 }
 
 async function render_table_from_storage() {
-    document.getElementById("report").style.display = "initial";
-    document.getElementById("autherror").style.display = "none";
-    document.getElementById("neterror").style.display = "none";
-
     chrome.storage.local.get("data", function(local) {
         chrome.storage.sync.get("options", function(obj) {
-            //alert(JSON.stringify(local, null, 4));
+            hide_all();
+            if (!("data" in local)) {
+                const loading = document.getElementById("loading");
+                loading.style.display = "block";
+                return;
+            }
+
+            const report = document.getElementById("report");
+            report.style.display = "initial";
+
+                    //alert(JSON.stringify(local, null, 4));
             let filter = "";
             let options = obj.options;
             if (options != null && options.filter != null) filter = options.filter;
@@ -244,31 +254,69 @@ async function render_table_from_storage() {
     });
 }
 
-function render_error(err) {
+function hide_all() {
     //alert(JSON.stringify(err, null, 4));
-    document.getElementById("report").style.display = "none";
     const autherror = document.getElementById("autherror");
     const neterror = document.getElementById("neterror");
+    const report = document.getElementById("report");
+    const loading = document.getElementById("loading");
 
+    const sections = [ autherror, neterror, report, loading ];
+    for (let i=0; i<sections.length; i++) {
+        sections[i].style.display = "none";
+    }
+}
+
+function render_error(err) {
+    hide_all();
     if (err.status == 401) {
-        neterror.style.display = "none";
+        const autherror = document.getElementById("autherror");
         autherror.style.display = "initial";
-        //document.getElementById("report")
     } else {
+        const neterror = document.getElementById("neterror");
         neterror.style.display = "initial";
-        autherror.style.display = "none";
         document.getElementById("errmessage").innerText = JSON.stringify(err, null, 4);
     }
 }
 
-chrome.storage.local.get("error", function(obj) {
-    if (obj != null && Object.keys(obj).length !== 0) {
-        render_error(obj.error);
-    } else {
+// Tapping escape closes the Loading overlay.
+document.onkeydown = function(evt) {
+    evt = evt || window.event;
+    if (evt.keyCode == 27) {
         render_table_from_storage();
+    }
+};
+
+chrome.storage.onChanged.addListener(function(changes, namespace) {
+    let changedItems = Object.keys(changes);
+
+    let error = false;
+    let options = false;
+    let data = false;
+    for (let item of changedItems) {
+        if (item == "error") error = true;
+        if (item == "options") options = true;
+        if (item == "data") data = true;
+    }
+
+    if (data || options) {
+        // We only have data OR options, so just let the
+        // function requery what it needs. Don't try to
+        // pass in the parameters.
+        render_table_from_storage();
+    } else if (error && "newValue" in changes["error"]) {
+        render_error(changes["error"].newValue);
     }
 });
 
+// This value is cleared before the background script opens
+// this window, so if we find that this value exists, then
+// it's been set asynchronously and we should use it.
+chrome.storage.local.get("error", function(obj) {
+    if (obj != null && Object.keys(obj).length !== 0) {
+        render_error(obj.error);
+    }
+});
 
 // let rows = obj.rows;
 
