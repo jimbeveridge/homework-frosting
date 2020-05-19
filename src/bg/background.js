@@ -230,13 +230,10 @@ async function build(pair) {
     if (report_window == null) {
         create_window();
     } else {
-        // chrome.tabs.getAllInWindow(report_window.id, function (tabs) {
-        //     if (chrome.extension.lastError != null) {
-        //         create_window();
-        //     }
-        // });
-        chrome.tabs.update(report_window.tabs[0].id, {highlighted: true}, function (e) {
-            if (chrome.extension.lastError != null) {
+        chrome.tabs.update(report_window.tabs[0].id, { highlighted: true }, function(e) {
+            // From http://www.adambarth.com/experimental/crx/docs/extension.html
+            // If no error has occured lastError will be undefined.
+            if ("lastError" in chrome.extension) {
                 create_window();
             }
         });
@@ -285,8 +282,7 @@ async function build(pair) {
         kv = { error: neterror };
     }
 
-    chrome.storage.local.set(kv, function() {
-    });
+    chrome.storage.local.set(kv);
 }
 
 function generate_report() {
@@ -300,16 +296,15 @@ function generate_report() {
 
 // Check for chrome so as to allow unit tests.
 if (!!chrome.runtime) {
+    console.log('!!chrome.runtime)');
     // https://developer.chrome.com/extensions/getstarted
-    chrome.runtime.onInstalled.addListener(function() {
-
-        chrome.pageAction.onClicked.addListener(function(tab) {
-            chrome.storage.local.remove("error", function() {
-                chrome.storage.local.remove("data", function() {
-                    generate_report();
-                });
-            });
-        });
+    chrome.runtime.onInstalled.addListener(function(details) {
+        // Example of what "details" looks like:
+        // onInstalled {
+        //   "previousVersion": "0.0.8",
+        //   "reason": "update"
+        // }
+        console.log('onInstalled ' + JSON.stringify(details, null, 4));
 
         // https://assignments.onenote.com/sections/classroom
         chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
@@ -324,6 +319,28 @@ if (!!chrome.runtime) {
                 actions: [new chrome.declarativeContent.ShowPageAction()]
             }]);
         });
-
     });
+
+    chrome.pageAction.onClicked.addListener(function(tab) {
+        console.log('onClicked');
+        chrome.storage.local.remove("error", function() {
+            chrome.storage.local.remove("data", function() {
+                console.log('generating report');
+                generate_report();
+            });
+        });
+    });
+
+    chrome.tabs.onRemoved.addListener(
+        function (tabId, removeInfo) {
+            for (let i=0; i<report_window.tabs.length; i++) {
+                console.log('onRemoved - searching');
+                if (report_window.tabs[0].id == tabId) {
+                    console.log('onRemoved - removed');
+                    report_window = null;
+                    break;
+                }
+            }
+        }
+    );
 }
