@@ -333,10 +333,9 @@ if (!!chrome.runtime) {
 
     chrome.tabs.onRemoved.addListener(
         function (tabId, removeInfo) {
+            if (report_window == null) return;
             for (let i=0; i<report_window.tabs.length; i++) {
-                console.log('onRemoved - searching');
-                if (report_window.tabs[0].id == tabId) {
-                    console.log('onRemoved - removed');
+                if (report_window.tabs[i].id == tabId) {
                     report_window = null;
                     break;
                 }
