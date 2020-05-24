@@ -18,6 +18,11 @@
         color: MediumPurple;
       }
 
+      form {
+        background-color: #eeeeee;
+        padding: 1rem 1rem;
+      }
+
       h2 {
         margin-top: 0;
         margin-bottom: 0.5rem;
@@ -27,7 +32,7 @@
         font-weight: bold;
       }
 
-      input {
+      input[type=submit] {
         color: white;
         background-color: mediumpurple;
         font-weight: bold;
@@ -61,25 +66,39 @@
     <li>Click the cupcake icon in the top right</li>
     <li>Wait about ten seconds and the report will be displayed</li>
   </ol>
-  <h2>Options</h2>
-  <div>To filter out assignments you don't want to see, enter words
-    or phrases, one per line. For example, if you never want to see
-    assignments containing "extra credit" or by the teacher Mr. Macinerny,
-    then type each on its own line.
-  </div>
-  <br>
   <form id="options-form">
-      <label for="options">Remove assignments with these words or phrases:</label>
+    <h2>Options</h2>
+    <div>To filter out assignments you don't want to see, enter words
+      or phrases below, one per line. For example, if you never want to see
+      assignments containing "extra credit" or by the teacher Mr. Macinerny,
+      then type each on its own line. <em>Phrases are not sensitive to upper/lower case</em>.
+    </div>
+    <br>
+        <label for="removelist">Remove assignments with these words or phrases:</label>
       <br>
-      <textarea id="options" rows="10" cols="50"></textarea>
+      <textarea id="removelist" rows="10" cols="50"></textarea>
+      <div id="myhwoptions" style="display: none;">
+        <br>
+        <p><img src="myhw32.png" style="float: left; padding-top: 6px; margin-right: 8px;">
+      Homework Frosting can send your assignments to  <span style="color: #2284B5;">my<b>Homework</b></span> so that you can see assignments, on your
+        phone. You will need a key from <a href="https://myhomeworkapp.com/settings/homework-external-apps">https://myhomeworkapp.com/settings/homework-external-apps</a>.
+      </p>
+        <label for="myhomeworkkey">App key for myHomework (optional):</label>
       <br>
-      <input type="submit">&nbsp;&nbsp;
+      <input id="myhomeworkkey" size="50""></input>
+      </div>
+      <br><br>
+      <input type="submit" value="Save" style="width: 8rem; height: 2rem; font-size:103%">&nbsp;&nbsp;
       <b><span id="saved" style="color: mediumpurple"></span></b>
     </form>
-    <p><em>Search text is
-    case-insensitive, which means that "extra credit" and "EXTRA CREDIT"
-    will both work.</em></p>
     <br><br>
+    <h2>Privacy Policy</h2>
+    <p>The makers of Homework Frosting do not collect or store your personal data. We never see your personal data and therefore can't share it,
+    even if we were asked to. However, Homework Frosting works with other companies that DO store your personal information,
+    including your homework data, and these companies have their own Privacy Policies. Currently, these companies are
+    <a href="https://privacy.microsoft.com/en-us/privacystatement">Microsoft</a> and, (if you enable it) <a href="https://myhomeworkapp.com/privacy">myHomework</a>.</p>
+    <p>Your usage of the Homework Frosting Chrome Extension is managed by Google. They have their own <a href="https://policies.google.com/privacy">Privacy Policy</a>. Google does
+    not tell us any personal information about who installs Homework Frosting.</p>
     <h2>Open Source Information</h2>
     Icons made by <a href="https://www.flaticon.com/authors/prosymbols" title="Prosymbols">Prosymbols</a> from <a href="https://www.flaticon.com/" title="Flaticon"> www.flaticon.com</a>
     <h4>License for <font style="font-family: monospace; font-size:125%;">date.format.js</font></h4>
@@ -99,6 +118,7 @@
       <p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
       <p>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
       <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-      </body>
-  <script src="options.js"></script>
+    </body>
+    <script src="../bg/myhw.js"></script>
+    <script src="options.js"></script>
 </html>

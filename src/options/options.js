@@ -1,8 +1,9 @@
 function processForm(e) {
     if (e.preventDefault) e.preventDefault();
 
-    phrases = document.getElementById('options').value;
-    chrome.storage.sync.set({ options: { filter: phrases } }, function() {
+    const phrases = document.getElementById('removelist').value;
+    const myhomeworkkey = document.getElementById('myhomeworkkey').value.trim();
+    chrome.storage.sync.set({ options: { filter: phrases, myhomeworkkey: myhomeworkkey } }, function() {
         document.getElementById('saved').innerHTML = "<span class='glow'>Saved</span>";
     });
 
@@ -11,17 +12,22 @@ function processForm(e) {
 }
 
 window.onload = function() {
-    let el = document.getElementById("options");
+    document.getElementById('options-form').onsubmit = processForm;
+
+    let el = document.getElementById("removelist");
     el.placeholder = "EXTRA CREDIT\nmacinerny";
+
+    if (typeof update_myhw == 'function') {
+        document.getElementById("myhwoptions").style.display = "initial";
+    }
 
     chrome.storage.sync.get("options", function(obj) {
         let options = obj.options;
         if (options != null && options.filter != null) {
             el.value = options.filter;
         }
+        if (options != null && options.myhomeworkkey != null) {
+            document.getElementById("myhomeworkkey").value = options.myhomeworkkey;
+        }
     });
-    document.getElementById('options-form').onsubmit = function(e) {
-        processForm(e);
-        return false;
-    }
 }
