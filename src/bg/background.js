@@ -8,80 +8,6 @@ const dataVersion = 5;
 
 let report_window = null;
 
-// Note that response.statusText will often be empty because
-// HTTP/2 does not define a way to carry the version or reason
-// phrase that is included in an HTTP/1.1 status line.
-const parseAPIResponse = response =>
-    new Promise(resolve => resolve(response.text()))
-    .catch(err =>
-        // eslint-disable-next-line prefer-promise-reject-errors
-        Promise.reject({
-            type: 'NetworkError',
-            status: response.status,
-            message: err,
-            url: response.url,
-        }))
-    .then((responseBody) => {
-
-        if (!response.ok) {
-            return Promise.reject({
-                type: 'HttpError',
-                status: response.status,
-                body: responseBody,
-                url: response.url,
-            });
-        }
-
-        // Attempt to parse JSON
-        try {
-            const parsedJSON = JSON.parse(responseBody);
-            if (response.ok) {
-                return parsedJSON;
-            } else {
-                return Promise.reject({
-                    type: 'HttpError',
-                    status: response.status,
-                    body: responseBody,
-                    url: response.url,
-                });
-            }
-        } catch (e) {
-            // If we got an HTML page, truncate it.
-            let body = response.statusText.substr(0, 500);
-
-            // We should never get these unless response is mangled
-            // Or API is not properly implemented
-            // eslint-disable-next-line prefer-promise-reject-errors
-            return Promise.reject({
-                type: 'InvalidJSON',
-                status: response.status,
-                body: body,
-                url: response.url,
-            });
-        }
-    });
-
-async function do_fetch(url, headers) {
-    const json = await fetch(url, { headers: headers })
-        .then(parseAPIResponse);
-    //.catch(err => alert(JSON.stringify(err, null, 4)));
-}
-
-async function do_fetch_with_bearer(url, bearer) {
-
-    const headers = {
-        'Content-Type': 'application/json',
-        Authorization: "Bearer " + bearer,
-        Accept: 'application/json',
-        credentials: "include"
-    };
-
-    const json = await fetch(url, { headers: headers })
-        .then(parseAPIResponse);
-    //.catch(err => alert(JSON.stringify(err, null, 4)));
-    return json;
-}
-
 async function fetch_classes(bearer) {
     return await do_fetch_with_bearer(classesUrl, bearer);
 }
@@ -91,7 +17,7 @@ function make_assignments_url(classes, i) {
         "/assignments?$select=classId,displayName,dueDateTime,assignedDateTime,allowLateSubmissions,createdDateTime,lastModifiedDateTime,status,isCompleted,id,instructions,grading,submissions&$expand=submissions";
 }
 
-async function fetch_all_with_bearer(bearer, classes) {
+async function fetch_assignments(bearer, classes) {
 
     const indices = Array.from({ length: classes.length }, (x, i) => i);
     //const indices = [4, 5];
@@ -126,16 +52,6 @@ async function fetch_all_with_bearer(bearer, classes) {
     return jsons;
 }
 
-function get_assignments(classes) {
-    let info = [];
-    for (oneclass of classes) {
-        assignments = read_assignments(oneclass.id);
-        info[oneclass.name] = assignments.value;
-        break;
-    }
-    return info;
-}
-
 function missing_submission(submissions) {
     if (submissions == null) return false;
     for (let i = 0; i < submissions.length; i++) {
@@ -168,11 +84,15 @@ function get_latest(coll, key) {
 }
 
 function create_row(classname, assignment) {
+    // Instructions always seem to be in HTML, unless it's
+    // an empty string, in which case it doesn't matter.
+    let instr = "";
+    if (assignment.instructions != null) instr = assignment.instructions.content;
+
     row = {
         id: assignment.id,
-        // Instructions always seem to be in HTML, unless it's
-        // an empty string, in which case it doesn't matter.
-        instructions: assignment.instructions,
+        classId: assignment.classId,
+        instructions: instr,
         lastModifiedDateTime: assignment.lastModifiedDateTime,
         createdDateTime: assignment.createdDateTime,
         classname: classname,
@@ -247,7 +167,7 @@ async function build(data, pair, storeFunc) {
 
     let jsons = null;
     if (neterror == null) {
-        jsons = await fetch_all_with_bearer(bearer, classes.value)
+        jsons = await fetch_assignments(bearer, classes.value)
             .catch(err => neterror = err);
     }
 
@@ -263,6 +183,10 @@ async function build(data, pair, storeFunc) {
     let kv = null;
     if (neterror == null) {
         data.rows = create_rows_from_class_map(jsons);
+
+        if (typeof update_myhw == 'function') {
+            //update_myhw(data.rows);
+        }
 
         // This is only used to inform the user of the last update in the report.
         // It cannot be used to filter what's loaded from Teams because
@@ -313,8 +237,10 @@ if (!!chrome.runtime) {
             const tab = tabs[0];
             // Execute script in the current tab
             chrome.tabs.executeScript(tab.id, { code: `[ localStorage['${adalKey}'], localStorage['${adalExp}'] ]` },
-                pair => { show_result_tab();
-                    build(data, pair, kv => chrome.storage.local.set(kv)); });
+                pair => {
+                    show_result_tab();
+                    build(data, pair, kv => chrome.storage.local.set(kv));
+                });
         });
     }
 
