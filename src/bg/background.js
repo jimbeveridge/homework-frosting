@@ -4,15 +4,9 @@ const classesUrl = 'https://assignments.onenote.com/api/v1.0/edu/me/classes';
 const adalKey = "adal.access.token.keyhttps://onenote.com/";
 const adalExp = "adal.expiration.keyhttps://onenote.com/";
 
-let report_window = null;
+const dataVersion = 5;
 
-// function getCookies(domain, name, callback) {
-//     chrome.cookies.get({ "url": domain, "name": name }, function(cookie) {
-//         if (callback) {
-//             callback(cookie);
-//         }
-//     });
-// }
+let report_window = null;
 
 // Note that response.statusText will often be empty because
 // HTTP/2 does not define a way to carry the version or reason
@@ -92,10 +86,9 @@ async function fetch_classes(bearer) {
     return await do_fetch_with_bearer(classesUrl, bearer);
 }
 
-function make_url(classes, i) {
-    let oneclass = classes[i];
-    return "https://assignments.onenote.com//api/v1.0/edu/classes/" + oneclass.id +
-        "/assignments?$select=classId,displayName,dueDateTime,assignedDateTime,allowLateSubmissions,createdDateTime,lastModifiedDateTime,status,statusreason,isCompleted,id,instructions,grading,submissions&$expand=submissions";
+function make_assignments_url(classes, i) {
+    return "https://assignments.onenote.com//api/v1.0/edu/classes/" + classes[i].id +
+        "/assignments?$select=classId,displayName,dueDateTime,assignedDateTime,allowLateSubmissions,createdDateTime,lastModifiedDateTime,status,isCompleted,id,instructions,grading,submissions&$expand=submissions";
 }
 
 async function fetch_all_with_bearer(bearer, classes) {
@@ -103,18 +96,13 @@ async function fetch_all_with_bearer(bearer, classes) {
     const indices = Array.from({ length: classes.length }, (x, i) => i);
     //const indices = [4, 5];
 
-    let mapper = {};
-    for (let i = 0; i < indices.length; i++) {
-        mapper[classes[i].id] = classes[i].displayName;
-    }
-
     let jsons = {};
     let promises = [];
 
     for (let i = 0; i < indices.length; i++) {
         const index = indices[i];
         const classname = classes[index].name;
-        const promise = do_fetch_with_bearer(make_url(classes, index), bearer)
+        const promise = do_fetch_with_bearer(make_assignments_url(classes, index), bearer)
             .then(result => {
                 jsons[classname] = result.value;
                 for (let i = 0; i < promises.length; i++) {
@@ -137,7 +125,6 @@ async function fetch_all_with_bearer(bearer, classes) {
 
     return jsons;
 }
-
 
 function get_assignments(classes) {
     let info = [];
@@ -183,6 +170,9 @@ function get_latest(coll, key) {
 function create_row(classname, assignment) {
     row = {
         id: assignment.id,
+        // Instructions always seem to be in HTML, unless it's
+        // an empty string, in which case it doesn't matter.
+        instructions: assignment.instructions,
         lastModifiedDateTime: assignment.lastModifiedDateTime,
         createdDateTime: assignment.createdDateTime,
         classname: classname,
@@ -197,10 +187,10 @@ function create_row(classname, assignment) {
     return row;
 }
 
-function create_rows_from_class_map(object) {
+function create_rows_from_class_map(obj) {
     const rows = [];
-    for (var classname of Object.keys(object)) {
-        const assignments = object[classname];
+    for (var classname of Object.keys(obj)) {
+        const assignments = obj[classname];
         for (let i = 0; i < assignments.length; i++) {
             let row = create_row(classname, assignments[i]);
             rows.push(row);
@@ -209,36 +199,35 @@ function create_rows_from_class_map(object) {
     return rows;
 }
 
-// For testing
-function index_assignments(assignments) {
-    let coll = {};
-    for (let i = 0; i < assignments.length; i++) {
-        let assignment = assignments[i];
-        coll[assignment.id] = assignment;
-    }
-    return coll;
-}
+// Parameters:
+// data: contains object shaped like { rows: [], updated: "isoTime"}
+// jsons: contains object shaped like { classname1: [], classname2, [] }
+// Returns:
+// Map of assignment ids that represent changed or added rows.
+function find_mutated_rows(oldRows, newRows) {
+    // Map each ID to its row index
+    const oldRowMap = oldRows.reduce(
+        (acc, val, i) => { return acc[val.id] = i, acc; }, {});
 
-function create_window() {
-    chrome.windows.create({
-        // Just use the full URL if you need to open an external page
-        url: chrome.runtime.getURL("page_action/page_action.html")
-    }, wnd => report_window = wnd);
-}
-
-async function build(pair) {
-    if (report_window == null) {
-        create_window();
-    } else {
-        chrome.tabs.update(report_window.tabs[0].id, { highlighted: true }, function(e) {
-            // From http://www.adambarth.com/experimental/crx/docs/extension.html
-            // If no error has occured lastError will be undefined.
-            if ("lastError" in chrome.extension) {
-                create_window();
+    const mutatedRowIds = newRows.reduce((mutatedRowIds, newRow) => {
+        if (newRow.id in oldRowMap) {
+            const oldRowIndex = oldRowMap[newRow.id];
+            const oldRow = oldRows[oldRowIndex];
+            // Changes to `submissions` don't affect lastModifiedDateTime :-(
+            if (newRow.lastModifiedDateTime != oldRow.lastModifiedDateTime ||
+                newRow.submittedDateTime != oldRow.submittedDateTime) {
+                mutatedRowIds[newRow.id] = true;
             }
-        });
-    }
+            // TODO - |oldRowMap| will end with the rows that were deleted, but
+            // we aren't currently doing anything with this information.
+            delete oldRowMap[newRow.id];
+        }
+    }, {});
 
+    return mutatedRowIds;
+}
+
+async function build(data, pair, storeFunc) {
     if (pair == null || pair.length != 1 || pair[0].length != 2) {
         console.log("Remote code failed");
         return;
@@ -252,7 +241,6 @@ async function build(pair) {
     // (I think?) the time could be far enough off to cause problems.
     // const exp = pair[0][1];
     // const now = new Date() / 1000;
-
 
     let classes = await fetch_classes(bearer)
         .catch(err => neterror = err);
@@ -274,29 +262,62 @@ async function build(pair) {
 
     let kv = null;
     if (neterror == null) {
-        coll = create_rows_from_class_map(jsons);
-        //console.log(JSON.stringify(coll, null, 4));
+        data.rows = create_rows_from_class_map(jsons);
+
+        // This is only used to inform the user of the last update in the report.
+        // It cannot be used to filter what's loaded from Teams because
+        // changes in the submissions section don't affect the lastModifiedDateTime.
         const now = new Date();
-        kv = { data: { rows: coll, updated: now.toISOString() } };
+        data.updated = now.toISOString();
+        kv = { data: data };
     } else {
         kv = { error: neterror };
     }
 
-    chrome.storage.local.set(kv);
+    storeFunc(kv);
 }
 
-function generate_report() {
-    // TODO: Check the expiration time in "exp"
-    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-        const tab = tabs[0];
-        // Execute script in the current tab
-        chrome.tabs.executeScript(tab.id, { code: `[ localStorage['${adalKey}'], localStorage['${adalExp}'] ]` }, build);
-    });
+function create_default_data_object() {
+    return { rows: [], updated: "", version: 2 };
 }
 
-// Check for chrome so as to allow unit tests.
+// All calls to chrome are within this block. The chrome.runtime object does
+// not exist during unit tests.
 if (!!chrome.runtime) {
     console.log('!!chrome.runtime)');
+
+    function show_result_tab() {
+        const create_window = function() {
+            chrome.windows.create({
+                // Just use the full URL if you need to open an external page
+                url: chrome.runtime.getURL("page_action/page_action.html")
+            }, wnd => report_window = wnd);
+        }
+
+        if (report_window == null) {
+            create_window();
+        } else {
+            chrome.tabs.update(report_window.tabs[0].id, { highlighted: true }, function(e) {
+                // From http://www.adambarth.com/experimental/crx/docs/extension.html
+                // If no error has occured lastError will be undefined.
+                if ("lastError" in chrome.extension) {
+                    create_window();
+                }
+            });
+        }
+    }
+
+    const generate_report = function(data) {
+        // TODO: Check the expiration time in "exp"
+        chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+            const tab = tabs[0];
+            // Execute script in the current tab
+            chrome.tabs.executeScript(tab.id, { code: `[ localStorage['${adalKey}'], localStorage['${adalExp}'] ]` },
+                pair => { show_result_tab();
+                    build(data, pair, kv => chrome.storage.local.set(kv)); });
+        });
+    }
+
     // https://developer.chrome.com/extensions/getstarted
     chrome.runtime.onInstalled.addListener(function(details) {
         // Example of what "details" looks like:
@@ -324,17 +345,21 @@ if (!!chrome.runtime) {
     chrome.pageAction.onClicked.addListener(function(tab) {
         console.log('onClicked');
         chrome.storage.local.remove("error", function() {
-            chrome.storage.local.remove("data", function() {
-                console.log('generating report');
-                generate_report();
+            chrome.storage.local.get("data", function(obj) {
+                data = create_default_data_object();
+                // Restore the saved object, if any
+                if (obj != null && "data" in obj && "version" in obj.data && obj.data.version == dataVersion) {
+                    data = obj.data;
+                }
+                generate_report(data);
             });
         });
     });
 
     chrome.tabs.onRemoved.addListener(
-        function (tabId, removeInfo) {
+        function(tabId, removeInfo) {
             if (report_window == null) return;
-            for (let i=0; i<report_window.tabs.length; i++) {
+            for (let i = 0; i < report_window.tabs.length; i++) {
                 if (report_window.tabs[i].id == tabId) {
                     report_window = null;
                     break;
