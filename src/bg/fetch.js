@@ -58,11 +58,11 @@ async function do_fetch(url, opts) {
     //.catch(err => alert(JSON.stringify(err, null, 4)));
 }
 
-async function do_fetch_with_bearer(url, bearer) {
+async function do_fetch_with_auth(url, auth) {
 
     const headers = {
         'Content-Type': 'application/json',
-        Authorization: "Bearer " + bearer,
+        Authorization: auth,
         Accept: 'application/json',
         credentials: "include"
     };
@@ -73,7 +73,9 @@ async function do_fetch_with_bearer(url, bearer) {
     return json;
 }
 
-async function batch_post(url, auth, bodies) {
+// `bodies` is an array of { verb: vvv, url: xxx, json: yyy }
+// verb defaults to POST
+async function batch_post(bodies, auth) {
     const fetch_opts = {
         method: 'POST',
         headers: {
@@ -88,9 +90,12 @@ async function batch_post(url, auth, bodies) {
 
     for (let i = 0; i < bodies.length; i++) {
         let opts = Object.assign({}, fetch_opts);
-        opts.body = bodies[i];
+        opts.body = bodies[i].json;
+        if ("verb" in bodies[i]) {
+            opts.method = bodies[i].verb;
+        }
 
-        const promise = do_fetch(url, opts)
+        const promise = do_fetch(bodies[i].url, opts)
             .then(result => {
                 //jsons[i] = result.value;
                 for (let i = 0; i < promises.length; i++) {

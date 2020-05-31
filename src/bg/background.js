@@ -4,12 +4,12 @@ const classesUrl = 'https://assignments.onenote.com/api/v1.0/edu/me/classes';
 const adalKey = "adal.access.token.keyhttps://onenote.com/";
 const adalExp = "adal.expiration.keyhttps://onenote.com/";
 
-const dataVersion = 5;
+const dataVersion = 2;
 
 let report_window = null;
 
-async function fetch_classes(bearer) {
-    return await do_fetch_with_bearer(classesUrl, bearer);
+async function fetch_classes(auth) {
+    return await do_fetch_with_auth(classesUrl, auth);
 }
 
 function make_assignments_url(classes, i) {
@@ -17,7 +17,7 @@ function make_assignments_url(classes, i) {
         "/assignments?$select=classId,displayName,dueDateTime,assignedDateTime,allowLateSubmissions,createdDateTime,lastModifiedDateTime,status,isCompleted,id,instructions,grading,submissions&$expand=submissions";
 }
 
-async function fetch_assignments(bearer, classes) {
+async function fetch_assignments(auth, classes) {
 
     const indices = Array.from({ length: classes.length }, (x, i) => i);
     //const indices = [4, 5];
@@ -28,7 +28,7 @@ async function fetch_assignments(bearer, classes) {
     for (let i = 0; i < indices.length; i++) {
         const index = indices[i];
         const classname = classes[index].name;
-        const promise = do_fetch_with_bearer(make_assignments_url(classes, index), bearer)
+        const promise = do_fetch_with_auth(make_assignments_url(classes, index), auth)
             .then(result => {
                 jsons[classname] = result.value;
                 for (let i = 0; i < promises.length; i++) {
@@ -153,21 +153,21 @@ async function build(data, pair, storeFunc) {
         return;
     }
 
-    let neterror = null;
+    const auth = "Bearer " + pair[0][0];
 
-    const bearer = pair[0][0];
+    let neterror = null;
 
     // We don't use the expired information we got from storage because
     // (I think?) the time could be far enough off to cause problems.
     // const exp = pair[0][1];
     // const now = new Date() / 1000;
 
-    let classes = await fetch_classes(bearer)
+    let classes = await fetch_classes(auth)
         .catch(err => neterror = err);
 
     let jsons = null;
     if (neterror == null) {
-        jsons = await fetch_assignments(bearer, classes.value)
+        jsons = await fetch_assignments(auth, classes.value)
             .catch(err => neterror = err);
     }
 
@@ -184,7 +184,7 @@ async function build(data, pair, storeFunc) {
     if (neterror == null) {
         data.rows = create_rows_from_class_map(jsons);
 
-        if (typeof update_myhw == 'function') {
+        if (typeof myhw_update == 'function') {
             //update_myhw(data.rows);
         }
 

@@ -17,7 +17,7 @@ window.onload = function() {
     let el = document.getElementById("removelist");
     el.placeholder = "EXTRA CREDIT\nmacinerny";
 
-    if (typeof update_myhw == 'function') {
+    if (typeof myhw_update == 'function') {
         document.getElementById("myhwoptions").style.display = "initial";
     }
 
