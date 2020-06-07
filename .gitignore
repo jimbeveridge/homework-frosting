@@ -1,5 +1,8 @@
 *.zip
 
+myhw.js
+myhw.min.js
+
 # Logs
 logs
 *.log
