@@ -1,3 +1,6 @@
+// Copyright 2020 James E. Beveridge
+// SPDX-License-Identifier: Apache-2.0
+
 const classesUrl = 'https://assignments.onenote.com/api/v1.0/edu/me/classes';
 
 // Local storage

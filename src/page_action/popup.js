@@ -1,3 +1,6 @@
+// Copyright 2020 James E. Beveridge
+// SPDX-License-Identifier: Apache-2.0
+
 const forTodayButton = document.getElementById("forTodayButton");
 const forLateButton = document.getElementById("forLateButton");
 

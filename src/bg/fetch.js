@@ -1,3 +1,5 @@
+// Copyright 2020 James E. Beveridge
+// SPDX-License-Identifier: Apache-2.0
 
 // Note that response.statusText will often be empty because
 // HTTP/2 does not define a way to carry the version or reason
