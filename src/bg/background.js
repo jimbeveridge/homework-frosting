@@ -211,7 +211,6 @@ function create_default_data_object() {
 // All calls to chrome are within this block. The chrome.runtime object does
 // not exist during unit tests.
 if (!!chrome.runtime) {
-    console.log('!!chrome.runtime)');
 
     function show_result_tab() {
         const create_window = function() {
@@ -254,7 +253,6 @@ if (!!chrome.runtime) {
         //   "previousVersion": "0.0.8",
         //   "reason": "update"
         // }
-        console.log('onInstalled ' + JSON.stringify(details, null, 4));
 
         // https://assignments.onenote.com/sections/classroom
         chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
@@ -272,7 +270,6 @@ if (!!chrome.runtime) {
     });
 
     chrome.pageAction.onClicked.addListener(function(tab) {
-        console.log('onClicked');
         chrome.storage.local.remove("error", function() {
             chrome.storage.local.get("data", function(obj) {
                 data = create_default_data_object();
