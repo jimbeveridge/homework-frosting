@@ -31,18 +31,19 @@ async function fetch_assignments(auth, classes) {
     for (let i = 0; i < indices.length; i++) {
         const index = indices[i];
         const classname = classes[index].name;
-        const promise = do_fetch_with_auth(make_assignments_url(classes, index), auth)
-            .then(result => {
-                jsons[classname] = result.value;
-                for (let i = 0; i < promises.length; i++) {
-                    if (promises[i] === promise) {
-                        promises.splice(i, 1);
-                        break;
+        if (classes[index].status === "active") {
+            const promise = do_fetch_with_auth(make_assignments_url(classes, index), auth)
+                .then(result => {
+                    jsons[classname] = result.value;
+                    for (let i = 0; i < promises.length; i++) {
+                        if (promises[i] === promise) {
+                            promises.splice(i, 1);
+                            break;
+                        }
                     }
-                }
-            });
-        promises.push(promise);
-
+                });
+            promises.push(promise);
+        }
         // Once we hit our concurrency limit, wait for a promise to resolve
         // before continuing so as to cap the number of outstanding requests.
         if (promises.length >= 4) {
